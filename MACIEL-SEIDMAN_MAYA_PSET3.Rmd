@@ -1,0 +1,84 @@
+---
+title: "Earthquake Death Toll Linear Regression"
+author: "MAYA MACIEL-SEIDMAN"
+date: "2024-03-02"
+output: pdf_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+# Load dplyr:
+library(dplyr)
+# Load tidyverse:
+library(tidyverse)
+# Load ggplot2:
+library(ggplot2)
+# Load modelsummary:
+library(modelsummary)
+```
+
+# Motivation
+
+I am interested in exploring the research question: Is there a linear relationship between an earthquake's magnitude and its death toll? The dependent variable of interest is the earthquake's death toll. I think that variation in an earthquake's death toll could be explained by an earthquake's magnitude since earthquakes with greater magnitude are more severe, and more severe earthquake's should, in theory, have higher death tolls since they are more destructive. Ideally, the data that would help me examine this is the death toll and magnitude of all recorded global earthquakes. I will be using NOAA's significant Earthquake Database from 2150 BC to October 16, 2017, which contains this exact data. It was downloaded as a csv from benjiao's GitHub page at this link: https://github.com/benjiao/significant-earthquakes/blob/master/earthquakes.csv.
+
+Null hypothesis: A linear relationship does not exist between an earthquake's magnitude and its death toll.\
+Alternate hypothesis: A linear relationship exists between an earthquake's magnitude and its death toll.
+
+# Data Preparation
+
+```{r}
+# Read in the data:
+earthquakes <- read.csv("./earthquakes.csv")
+
+# Summarize the data:
+summary(earthquakes)
+head(earthquakes)
+
+# Data wrangling:
+# Select only the columns with the variables of interest:
+earthquakes <- earthquakes %>% select(deaths, magnitude)
+# Get rid of NA values:
+earthquakes <- earthquakes %>% drop_na()
+dim(earthquakes)
+head(earthquakes)
+typeof(earthquakes$deaths)
+typeof(earthquakes$magnitude)
+```
+
+Summary of the data:
+This data is a record of every known earthquake from 2150 BC to October 16, 2017. Each observation is an earthquake. The variables include earthquake characteristics including location, magnitude, death toll, year, focal depth, number of houses destroyed, and more. Since I am only interested in looking at the relationship between an earthquake's magnitude and death toll, I selected only those columns. Since this dataset includes very historic earthquakes, it has some NA values since not all earthquake characteristics could be recorded for some historic time frames. I omitted data with NA values so I was left with a dataset containing 1588 observations of earthquakes with the 2 variables magnitude and deaths. Deaths is an integer and magnitude is a double, which are both numeric, allowing me to perfom an OLS regression.
+
+# Conduct
+
+```{r}
+# Run OLS regression:
+lm_earthquakes <- lm(formula = deaths~magnitude, data=earthquakes)
+```
+
+
+```{r}
+# Table of model results:
+modelsummary(lm_earthquakes, stars = TRUE)
+```
+
+
+```{r}
+# Figure of model results:
+# Plot scatter plot of original data with the regression line:
+plot(earthquakes$magnitude,earthquakes$deaths)
+abline(lm(formula=deaths~magnitude, data=earthquakes), col="blue")
+```
+
+
+# Interpretations
+
+According to my regression table, an increase of 1 in an earthquake's magnitude, on average, is associated with a 3,686.261 increase in an earthquake's death toll. The stars next to this number on my regression table indicate that this result is statistically significant, meaning it is unlikely that we would observe an association between an earthquake's magnitude and death toll due to chance. However, when we look at the goodness of fit statistics from the regression table, it is clear that this association might not be linear. The R2 and R2 Adj. values, both 0.017, show that only 1.7% of the variation in an earthquake's death toll can be explained by an OLS regression model. The AIC and BIC are 36917.8 and 36933.9, respectively. These are large values, which means that the OLS regression model is not the best fit for this data. Finally, the RMSE value is 26988.23, indicating a high average error in the model predicting an earthquake's death toll given its magnitude. Additionally, looking at the scatter plot of the original data with the regression line, the regression line does not seem to fit the data well. There are many points far above the line.
+
+These results mean that while there is a statistically significant association between an earthquake's magnitude and death toll, an OLS regression is not the best model to explain the variation in an earthquake's death toll.
+
+Based on these results, I would want to conduct future analysis with a different type of model. While there seems to not be a linear relationship between an earthquake's magnitude and its death toll, there might be another type of relationship; perhaps an exponential relationship. This would help me advance future research on this topic because if there is an exponential relationship between magnitude and death toll, then we would be able to understand a threshold of earthquake magnitude where the death toll is much higher than other magnitudes. We also then could have a different scale for earthquake death toll which is separate from the magnitude scale, which only describes severity in terms of destruction.
+
+
+# Diagnostics
+
+Based on the results from my model, OLS seems to be not appropriate. The data is appropriate to use to investigate my research question, but it does not follow a linear relationship. My main cause for concern about using an OLS regression model include the very low R2 and R2 Adj. values and very high AIC, BIC, and RMSE values from my regression table. These goodness of fit statistics for my model convey to me that my model is mis-specified for this data because it does not fit the data well for the reasons discussed in my Interpretations section above.
